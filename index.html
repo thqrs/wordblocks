@@ -42,37 +42,102 @@
             padding: 5px;
             cursor: pointer;
         }
+
+        #add-block {
+            margin: 20px;
+        }
     </style>
 </head>
 <body>
+    <button id="add-block">Add Block</button>
+
     <div class="note-block">
-        <div class="text-content" contenteditable="true">Type your note here...</div>
+        <div class="text-content" contenteditable="true">Sample Note 1</div>
         <div class="context-menu">...</div>
         <ul class="color-menu">
             <li data-color="lightblue">Light Blue</li>
             <li data-color="lightgreen">Light Green</li>
             <li data-color="lightpink">Light Pink</li>
             <li data-color="lightyellow">Light Yellow</li>
+            <li data-action="delete">Delete</li>
         </ul>
     </div>
-    
+
+    <div class="note-block">
+        <div class="text-content" contenteditable="true">Sample Note 2</div>
+        <div class="context-menu">...</div>
+        <ul class="color-menu">
+            <li data-color="lightblue">Light Blue</li>
+            <li data-color="lightgreen">Light Green</li>
+            <li data-color="lightpink">Light Pink</li>
+            <li data-color="lightyellow">Light Yellow</li>
+            <li data-action="delete">Delete</li>
+        </ul>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script>
         $(function() {
+            // Make note blocks draggable
             $(".note-block").draggable();
 
+            // Handle context menu clicks
             $(".context-menu").click(function() {
                 $(this).siblings(".color-menu").toggle();
             });
 
+            // Handle color menu item clicks
             $(".color-menu li").click(function() {
                 var color = $(this).data("color");
-                $(this).closest(".note-block").css("background-color", color);
+                var action = $(this).data("action");
+
+                if (color) {
+                    $(this).closest(".note-block").css("background-color", color);
+                } else if (action === 'delete') {
+                    $(this).closest(".note-block").remove();
+                }
+
                 $(this).parent().hide();
+            });
+
+            // Add new block
+            $("#add-block").click(function() {
+                var newBlock = `
+                    <div class="note-block">
+                        <div class="text-content" contenteditable="true">New Note</div>
+                        <div class="context-menu">...</div>
+                        <ul class="color-menu">
+                            <li data-color="lightblue">Light Blue</li>
+                            <li data-color="lightgreen">Light Green</li>
+                            <li data-color="lightpink">Light Pink</li>
+                            <li data-color="lightyellow">Light Yellow</li>
+                            <li data-action="delete">Delete</li>
+                        </ul>
+                    </div>
+                `;
+
+                $(newBlock).appendTo('body').draggable();
+
+                // Attach event listeners to new block
+                $(".note-block").off('click').on('click', '.context-menu', function() {
+                    $(this).siblings(".color-menu").toggle();
+                });
+
+                $(".color-menu li").off('click').on('click', function() {
+                    var color = $(this).data("color");
+                    var action = $(this).data("action");
+
+                    if (color) {
+                        $(this).closest(".note-block").css("background-color", color);
+                    } else if (action === 'delete') {
+                        $(this).closest(".note-block").remove();
+                    }
+
+                    $(this).parent().hide();
+                });
             });
         });
     </script>
 </body>
 </html>
-
