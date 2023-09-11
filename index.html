@@ -1,1 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Note Blocks</title>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <style>
+        .note-block {
+            width: 200px;
+            height: 150px;
+            background-color: lightblue;
+            position: relative;
+            margin: 20px;
+            padding: 10px;
+        }
+
+        .text-content {
+            width: 100%;
+            height: 80%;
+            overflow: auto;
+        }
+
+        .context-menu {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            cursor: pointer;
+        }
+
+        .color-menu {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            list-style: none;
+            background-color: white;
+            border: 1px solid gray;
+        }
+
+        .color-menu li {
+            padding: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="note-block">
+        <div class="text-content" contenteditable="true">Type your note here...</div>
+        <div class="context-menu">...</div>
+        <ul class="color-menu">
+            <li data-color="lightblue">Light Blue</li>
+            <li data-color="lightgreen">Light Green</li>
+            <li data-color="lightpink">Light Pink</li>
+            <li data-color="lightyellow">Light Yellow</li>
+        </ul>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script>
+        $(function() {
+            $(".note-block").draggable();
+
+            $(".context-menu").click(function() {
+                $(this).siblings(".color-menu").toggle();
+            });
+
+            $(".color-menu li").click(function() {
+                var color = $(this).data("color");
+                $(this).closest(".note-block").css("background-color", color);
+                $(this).parent().hide();
+            });
+        });
+    </script>
+</body>
+</html>
 
