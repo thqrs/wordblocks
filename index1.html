@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Page with CSS Squares</title>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+
+    <style>
+        .css-square {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 200px;  /* Width of the carousel item */
+            height: 200px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="main-content"></div>
+
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<script>
+    const carouselData = [
+        {
+            title: "Title 1",
+            colors: ["#ff0000", "#00ff00", "#0000ff"],
+            texts: ["Text 1A", "Text 1B", "Text 1C"]
+        },
+        {
+            title: "Title 2",
+            colors: ["#ffff00", "#00ffff", "#ff00ff"],
+            texts: ["Text 2A", "Text 2B", "Text 2C"]
+        }
+        // ... Add more rows as needed
+    ];
+
+    function generateCarouselRow(data, index) {
+        const container = document.createElement('div');
+        container.className = 'swiper-container';
+        container.id = `swiper${index}`;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'swiper-wrapper';
+
+        data.texts.forEach((text, idx) => {
+            const slide = document.createElement('div');
+            slide.className = 'swiper-slide css-square';
+            slide.style.backgroundColor = data.colors[idx];
+
+            const p = document.createElement('p');
+            p.innerText = text;
+            slide.appendChild(p);
+
+            wrapper.appendChild(slide);
+        });
+
+        container.appendChild(wrapper);
+
+        const pagination = document.createElement('div');
+        pagination.className = 'swiper-pagination';
+        container.appendChild(pagination);
+
+        return container;
+    }
+
+    window.onload = function() {
+        const mainContent = document.getElementById('main-content');
+
+        carouselData.forEach((data, idx) => {
+            const title = document.createElement('h1');
+            title.innerText = data.title;
+            mainContent.appendChild(title);
+
+            const carousel = generateCarouselRow(data, idx);
+            mainContent.appendChild(carousel);
+
+            new Swiper(`#swiper${idx}`, {
+                pagination: {
+                    el: '.swiper-pagination',
+                    clickable: true,
+                },
+            });
+        });
+    }
+</script>
+</body>
+</html>
