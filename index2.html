@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construct a Talk</title>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+    <style>
+        .swiper-container {
+            width: 100%;
+            height: 200px;
+        }
+
+        .swiper-slide {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 20px;
+            box-shadow: 2px 2px 5px #aaa;
+        }
+    </style>
+</head>
+<body>
+    <section id="engage">
+        <h2>Engage</h2>
+        <div class="swiper-container">
+            <div class="swiper-wrapper">
+                <!-- Carousel items for Engage will be inserted here by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Repeat similar sections for other parts of the JSON structure -->
+
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script>
+        const talks = [
+            {
+                "Engage": "Engage 1",
+                "Set the Objective": "Objective 1",
+                // ... other parts of the talk
+            },
+            {
+                "Engage": "Engage 2",
+                "Set the Objective": "Objective 2",
+                // ... other parts of the talk
+            },
+            {
+                "Engage": "Engage 3",
+                "Set the Objective": "Objective 3",
+                // ... other parts of the talk
+            }
+        ];
+
+        const engageCarousel = new Swiper('.swiper-container', {
+            loop: true,
+            slidesPerView: 1,
+            spaceBetween: 10,
+        });
+
+        talks.forEach(talk => {
+            const slide = document.createElement('div');
+            slide.className = 'swiper-slide';
+            slide.innerText = talk.Engage;
+            engageCarousel.appendSlide(slide);
+        });
+    </script>
+</body>
+</html>
