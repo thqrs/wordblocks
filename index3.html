@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construct a Talk</title>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+    <style>
+        .swiper-container {
+            width: 100%;
+            height: 200px;
+        }
+
+        .swiper-slide {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 20px;
+            box-shadow: 2px 2px 5px #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div id="content">
+        <!-- Content generated from JSON will be inserted here -->
+    </div>
+
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script>
+        // Assuming you have a JSON file named "talk.json"
+        fetch('/path_to_your_file/talk.json')
+            .then(response => response.json())
+            .then(data => {
+                const contentDiv = document.getElementById('content');
+
+                for (let key in data) {
+                    // Create a section for each key
+                    const section = document.createElement('section');
+                    section.id = key.toLowerCase().replace(/ /g, '-');
+                    const h2 = document.createElement('h2');
+                    h2.textContent = key;
+                    section.appendChild(h2);
+
+                    // Create a swiper container for carousel
+                    const swiperContainer = document.createElement('div');
+                    swiperContainer.className = 'swiper-container';
+                    const swiperWrapper = document.createElement('div');
+                    swiperWrapper.className = 'swiper-wrapper';
+                    swiperContainer.appendChild(swiperWrapper);
+
+                    // Create a slide for each value inside the key
+                    data[key].forEach(value => {
+                        const slide = document.createElement('div');
+                        slide.className = 'swiper-slide';
+                        slide.textContent = value;
+                        swiperWrapper.appendChild(slide);
+                    });
+
+                    section.appendChild(swiperContainer);
+                    contentDiv.appendChild(section);
+
+                    // Initialize the Swiper carousel for this section
+                    new Swiper(swiperContainer, {
+                        loop: true,
+                        slidesPerView: 1,
+                        spaceBetween: 10,
+                    });
+                }
+            });
+    </script>
+</body>
+</html>
