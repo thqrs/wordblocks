@@ -197,13 +197,20 @@ function initializeSwipers() {
             document.getElementById('combinationInput').value = combination;
         }
 
-        function updateSlidesFromCombination() {
-            const combination = document.getElementById('combinationInput').value;
-            const slideIndices = combination.split('-').map(num => parseInt(num) - 1);
-            slideIndices.forEach((slideIndex, i) => {
-                swipers[i].slideTo(slideIndex);
-            });
-        }
+function updateSlidesFromCombination() {
+    const combination = document.getElementById('combinationInput').value;
+    let slideIndices = combination.split('-').map(num => parseInt(num) - 1);
+    
+    // If the length of slideIndices is less than the number of swipers, fill in the rest with the last number
+    while (slideIndices.length < swipers.length) {
+        slideIndices.push(slideIndices[slideIndices.length - 1]);
+    }
+
+    slideIndices.forEach((slideIndex, i) => {
+        swipers[i].slideTo(slideIndex);
+    });
+}
+
     </script>
 </body>
 
