@@ -181,11 +181,9 @@
                 loop: true,  // This makes the carousel infinite
                 on: {
                     slideChange: function () {
-                        const fileDropdown = container.nextElementSibling;
-                        const slideNumberInput = fileDropdown.nextElementSibling;
-                        slideNumberInput.value = this.realIndex + 1;  // Use realIndex because of the loop mode
-                        fileDropdown.selectedIndex = this.realIndex;
-                        updateCombinationInput();
+            slideNumberInput.value = this.realIndex + 1;
+            fileDropdown.selectedIndex = this.realIndex;
+            updateCombinationInput();
                     }
                 }
             });
