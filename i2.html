@@ -108,12 +108,11 @@
 
                 promises.push(filePromise);
             });
-
-            Promise.all(promises).then(() => {
-                displayData(allSections, data.folders[theme]);
-                initializeSwipers();
-            });
-        });
+   Promise.all(promises).then(() => {
+        displayData(allSections, data.folders[theme]);
+        initializeSwipers();
+    });
+        
 }
 
         function extractSections(content) {
@@ -175,20 +174,25 @@
         container.appendChild(sectionDiv);
     });
 }
-const swiper = new Swiper(container, {
-    loop: true,  // This makes the carousel infinite
-    on: {
-        slideChange: function () {
-            const fileDropdown = container.nextElementSibling;
-            const slideNumberInput = fileDropdown.nextElementSibling;
-            slideNumberInput.value = this.realIndex + 1;  // Use realIndex because of the loop mode
-            fileDropdown.selectedIndex = this.realIndex;
-            updateCombinationInput();
-        }
-    }
-});
-swipers.push(swiper);
-swiper.emit('slideChange');  // Trigger the event for the first slide
+function initializeSwipers() {
+    const swiperContainers = document.querySelectorAll('.swiper-container');
+    swiperContainers.forEach((container, index) => {
+        const swiper = new Swiper(container, {
+            loop: true,  // This makes the carousel infinite
+            on: {
+                slideChange: function () {
+                    const fileDropdown = container.nextElementSibling;
+                    const slideNumberInput = fileDropdown.nextElementSibling;
+                    slideNumberInput.value = this.realIndex + 1;  // Use realIndex because of the loop mode
+                    fileDropdown.selectedIndex = this.realIndex;
+                    updateCombinationInput();
+                }
+            }
+        });
+        swipers.push(swiper);
+        swiper.emit('slideChange');  // Trigger the event for the first slide
+    });
+}
 
         function updateCombinationInput() {
             const combination = swipers.map(swiper => swiper.activeIndex + 1).join('-');
