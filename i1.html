@@ -57,27 +57,28 @@
         };
 
         function loadFiles() {
-            const theme = document.getElementById('folderDropdown').value;
-            if (!theme) return;
-
-            document.getElementById('pageTitle').textContent = theme;
-            const container = document.getElementById('displayContainer');
-            container.innerHTML = ''; // Clear previous content
-
-            fetch('manifest.json')
-                .then(response => response.json())
-                .then(data => {
-                    data.folders[theme].forEach(fileName => {
-                        // Here, for simplicity, I'm assuming you have the .txt files in the same directory as the HTML. Adjust path as needed.
-                        fetch(fileName)
-                            .then(response => response.text())
-                            .then(content => {
-                                const extractedSections = extractSections(content);
-                                displayData(extractedSections);
-                            });
+                const theme = document.getElementById('folderDropdown').value;
+                if (!theme) return;
+            
+                document.getElementById('pageTitle').textContent = theme;
+                const container = document.getElementById('displayContainer');
+                container.innerHTML = ''; // Clear previous content
+            
+                fetch('manifest.json')
+                    .then(response => response.json())
+                    .then(data => {
+                        data.folders[theme].forEach(fileName => {
+                            fetch(fileName)
+                                .then(response => response.text())
+                                .then(content => {
+                                    console.log(`Content of ${fileName}:`, content); // Log the content for debugging
+                                    const extractedSections = extractSections(content);
+                                    displayData(extractedSections);
+                                });
+                        });
                     });
-                });
-        }
+            }
+
 
         function extractSections(content) {
             let results = {};
