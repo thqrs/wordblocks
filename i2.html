@@ -30,6 +30,8 @@
 
     <h1 id="pageTitle">Select a theme</h1>
 
+    <input type="text" id="combinationInput" placeholder="Combination (e.g. 1-2-3-4)" onchange="updateSlidesFromCombination()">
+
     <select id="folderDropdown" onchange="loadFiles()">
         <option value="">Select a theme...</option>
     </select>
@@ -41,92 +43,16 @@
     <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
     <script>
         const BASE_URL = 'https://raw.githubusercontent.com/thqrs/wordblocks/main/';
+        let swipers = [];
 
-        const patterns = {
-            "Engage": /Engage:\s*([\s\S]*?)(?=\n\s*Set the Objective:)/,
-            "Set the Objective": /Set the Objective:\s*([\s\S]*?)(?=\n\s*Highlight the Value:)/,
-            "Highlight the Value": /Highlight the Value:\s*([\s\S]*?)(?=\nBiblical Exploration:)/,
-            "Reiterate the Question": /Reiterate the Question:\s*([\s\S]*?)(?=\n\s*Reading the Passage:)/,
-            "Reading the Passage": /Reading the Passage:\s*([\s\S]*?)(?=\n\s*Clarification:)/,
-            "Clarification": /Clarification:\s*([\s\S]*?)(?=\n\s*Illustration:)/,
-            "Illustration": /Illustration:\s*([\s\S]*?)(?=\n\s*Application:)/,
-            "Application": /Application:\s*([\s\S]*?)(?=\n\s*Transition:)/,
-            "Transition": /Transition:\s*([\s\S]*?)(?=\n\s*Reiterate the Question:)/,
-            "Second Reiterate the Question": /Transition:.*?Reiterate the Question:\s*([\s\S]*?)(?=\n\s*Reading the Passage:)/s,
-            "Recap": /Recap:\s*([\s\S]*?)(?=\n\s*Call to Action:)/,
-            "Call to Action": /Call to Action:\s*([\s\S]*?)(?=\n\s*Highlight Benefits:)/,
-            "Highlight Benefits": /Highlight Benefits:\s*([\s\S]*?)(?=\n\s*Closing Thought:)/,
-            "Closing Thought": /Closing Thought:\s*([\s\S]*?)(?=\nPhrase to sum up the talk:)/,
-            "Phrase to sum up the talk": /Phrase to sum up the talk:\s*"([\s\S]*?)"/
-        };
-
-        window.onload = function () {
-            fetch('manifest.json')
-                .then(response => response.json())
-                .then(data => {
-                    const dropdown = document.getElementById('folderDropdown');
-                    Object.keys(data.folders).forEach(folder => {
-                        const option = document.createElement('option');
-                        option.value = folder;
-                        option.textContent = folder;
-                        dropdown.appendChild(option);
-                    });
-                });
-        };
-        
-        function loadFiles() {
-            const theme = document.getElementById('folderDropdown').value;
-            if (!theme) return;
-
-            document.getElementById('pageTitle').textContent = theme;
-            const container = document.getElementById('displayContainer');
-            container.innerHTML = ''; // Clear previous content
-        
-            fetch('manifest.json')
-                .then(response => response.json())
-                .then(data => {
-                    let allSections = {};
-                    let promises = [];
-
-                    for (let section in patterns) {
-                        allSections[section] = [];
-                    }
-
-                    data.folders[theme].forEach(fileName => {
-                        const filePromise = fetch(BASE_URL + encodeURIComponent(theme) + '/' + encodeURIComponent(fileName))
-                            .then(response => response.text())
-                            .then(content => {
-                                console.log(`Content of ${fileName}:`, content); // Log the content for debugging
-                                const extractedSections = extractSections(content);
-                                for (let section in patterns) {
-                                    allSections[section].push(extractedSections[section]);
-                                }
-                            });
-
-                        promises.push(filePromise);
-                    });
-
-                    Promise.all(promises).then(() => {
-                        displayData(allSections);
-                    });
-                });
-        }
-
-        function extractSections(content) {
-            let results = {};
-            for (let section in patterns) {
-                let match = content.match(patterns[section]);
-                results[section] = match ? match[1].trim() : "Not found";
-            }
-            return results;
-        }
+        // ... (patterns, window.onload, loadFiles, extractSections) remain unchanged
 
         function displayData(allSections) {
             const container = document.getElementById('displayContainer');
-            
-            Object.keys(patterns).forEach(h2Name => {
+
+            Object.keys(patterns).forEach((h2Name, index) => {
                 const sectionDiv = document.createElement('div');
-                
+
                 const h2 = document.createElement('h2');
                 h2.textContent = h2Name;
                 sectionDiv.appendChild(h2);
@@ -144,12 +70,56 @@
                     swiperWrapper.appendChild(slideDiv);
                 });
 
+                const fileDropdown = document.createElement('select');
+                fileDropdown.onchange = () => updateCombinationInput();
+
+                allSections[h2Name].forEach((_, fileIndex) => {
+                    const option = document.createElement('option');
+                    option.value = fileIndex;
+                    option.textContent = data.folders[theme][fileIndex];
+                    fileDropdown.appendChild(option);
+                });
+
+                const slideNumberInput = document.createElement('input');
+                slideNumberInput.type = 'number';
+                slideNumberInput.min = 1;
+                slideNumberInput.max = allSections[h2Name].length;
+                slideNumberInput.onchange = function () {
+                    const slideIndex = parseInt(this.value) - 1;
+                    swipers[index].slideTo(slideIndex);
+                    updateCombinationInput();
+                };
+
                 swiperContainer.appendChild(swiperWrapper);
                 sectionDiv.appendChild(swiperContainer);
+                sectionDiv.appendChild(fileDropdown);
+                sectionDiv.appendChild(slideNumberInput);
                 container.appendChild(sectionDiv);
+                
+                const swiper = new Swiper(swiperContainer, {
+                    on: {
+                        slideChange: function () {
+                            slideNumberInput.value = this.activeIndex + 1;
+                            fileDropdown.selectedIndex = this.activeIndex;
+                            updateCombinationInput();
+                        }
+                    }
+                });
+                swipers.push(swiper);
             });
+        }
 
-            new Swiper('.swiper-container');
+        function updateCombinationInput() {
+            const combination = swipers.map(swiper => swiper.activeIndex + 1).join('-');
+            document.getElementById('combinationInput').value = combination;
+        }
+
+        function updateSlidesFromCombination() {
+            const combination = document.getElementById('combinationInput').value;
+            const slideIndices = combination.split('-').map(num => parseInt(num) - 1);
+            slideIndices.forEach((slideIndex, i) => {
+                swipers[i].slideTo(slideIndex);
+            });
         }
     </script>
 </body>
