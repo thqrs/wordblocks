@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manifest Display</title>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+    <style>
+        /* Swiper default styles */
+        .swiper-container {
+            width: 100%;
+            height: 200px;
+        }
+
+        .swiper-slide {
+            text-align: center;
+            font-size: 18px;
+            background: #fff;
+
+            /* Center slide text vertically */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1 id="pageTitle">Select a theme</h1>
+
+    <input type="text" id="combinationInput" placeholder="Combination (e.g. 1-2-3-4)" onchange="updateSlidesFromCombination()">
+<button onclick="randomizeCombination()">Randomize</button>
+    <select id="folderDropdown" onchange="loadFiles()">
+        <option value="">Select a theme...</option>
+    </select>
+
+    <div id="displayContainer">
+        <!-- The extracted content will be displayed here -->
+    </div>
+
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script>
+        const BASE_URL = 'https://raw.githubusercontent.com/thqrs/wordblocks/main/';
+        let swipers = [];
+
+ const patterns = {
+            "Engage": /Engage:\s*([\s\S]*?)(?=\n\s*Set the Objective:)/,
+            "Set the Objective": /Set the Objective:\s*([\s\S]*?)(?=\n\s*Highlight the Value:)/,
+            "Highlight the Value": /Highlight the Value:\s*([\s\S]*?)(?=\nBiblical Exploration:)/,
+            "Reiterate the Question": /Reiterate the Question:\s*([\s\S]*?)(?=\n\s*Reading the Passage:)/,
+            "Reading the Passage": /Reading the Passage:\s*([\s\S]*?)(?=\n\s*Clarification:)/,
+            "Clarification": /Clarification:\s*([\s\S]*?)(?=\n\s*Illustration:)/,
+            "Illustration": /Illustration:\s*([\s\S]*?)(?=\n\s*Application:)/,
+            "Application": /Application:\s*([\s\S]*?)(?=\n\s*Transition:)/,
+            "Transition": /Transition:\s*([\s\S]*?)(?=\n\s*Reiterate the Question:)/,
+            "Second Reiterate the Question": /Transition:.*?Reiterate the Question:\s*([\s\S]*?)(?=\n\s*Reading the Passage:)/s,
+            "Recap": /Recap:\s*([\s\S]*?)(?=\n\s*Call to Action:)/,
+            "Call to Action": /Call to Action:\s*([\s\S]*?)(?=\n\s*Highlight Benefits:)/,
+            "Highlight Benefits": /Highlight Benefits:\s*([\s\S]*?)(?=\n\s*Closing Thought:)/,
+            "Closing Thought": /Closing Thought:\s*([\s\S]*?)(?=\nPhrase to sum up the talk:)/,
+            "Phrase to sum up the talk": /Phrase to sum up the talk:\s*"([\s\S]*?)"/
+        };
+
+        window.onload = function () {
+            fetch('manifest.json')
+                .then(response => response.json())
+                .then(data => {
+                    const dropdown = document.getElementById('folderDropdown');
+                    Object.keys(data.folders).forEach(folder => {
+                        const option = document.createElement('option');
+                        option.value = folder;
+                        option.textContent = folder;
+                        dropdown.appendChild(option);
+                    });
+                });
+        };
+        
+        function loadFiles() {
+    const theme = document.getElementById('folderDropdown').value;
+    if (!theme) return;
+
+    document.getElementById('pageTitle').textContent = theme;
+    const container = document.getElementById('displayContainer');
+    container.innerHTML = ''; // Clear previous content
+
+    fetch('manifest.json')
+        .then(response => response.json())
+        .then(data => {
+            let allSections = {};
+            let promises = [];
+
+            for (let section in patterns) {
+                allSections[section] = [];
+            }
+
+            data.folders[theme].forEach(fileName => {
+                const filePromise = fetch(BASE_URL + encodeURIComponent(theme) + '/' + encodeURIComponent(fileName))
+                    .then(response => response.text())
+                    .then(content => {
+                        console.log(`Content of ${fileName}:`, content); // Log the content for debugging
+                        const extractedSections = extractSections(content);
+                        for (let section in patterns) {
+                            allSections[section].push(extractedSections[section]);
+                        }
+                    });
+
+                promises.push(filePromise);
+            });
+
+            Promise.all(promises).then(() => {
+                displayData(allSections, data.folders[theme]);
+                initializeSwipers();
+            });
+        });
+}
+
+        function extractSections(content) {
+            let results = {};
+            for (let section in patterns) {
+                let match = content.match(patterns[section]);
+                results[section] = match ? match[1].trim() : "Not found";
+            }
+            return results;
+        }
+
+        function displayData(allSections, fileNames) {
+    const container = document.getElementById('displayContainer');
+
+    Object.keys(patterns).forEach((h2Name, index) => {
+        const sectionDiv = document.createElement('div');
+
+        const h2 = document.createElement('h2');
+        h2.textContent = h2Name;
+        sectionDiv.appendChild(h2);
+
+        const swiperContainer = document.createElement('div');
+        swiperContainer.className = 'swiper-container';
+
+        const swiperWrapper = document.createElement('div');
+        swiperWrapper.className = 'swiper-wrapper';
+
+        allSections[h2Name].forEach(sectionContent => {
+            const slideDiv = document.createElement('div');
+            slideDiv.className = 'swiper-slide';
+            slideDiv.textContent = sectionContent;
+            swiperWrapper.appendChild(slideDiv);
+        });
+
+        const fileDropdown = document.createElement('select');
+        fileDropdown.onchange = () => updateCombinationInput();
+
+        fileNames.forEach((fileName, fileIndex) => {
+            const option = document.createElement('option');
+            option.value = fileIndex;
+            option.textContent = fileName;
+            fileDropdown.appendChild(option);
+        });
+
+        const slideNumberInput = document.createElement('input');
+        slideNumberInput.type = 'number';
+        slideNumberInput.min = 1;
+        slideNumberInput.max = allSections[h2Name].length;
+        slideNumberInput.onchange = function () {
+            const slideIndex = parseInt(this.value) - 1;
+            swipers[index].slideTo(slideIndex);
+            updateCombinationInput();
+        };
+
+        swiperContainer.appendChild(swiperWrapper);
+        sectionDiv.appendChild(swiperContainer);
+        sectionDiv.appendChild(fileDropdown);
+        sectionDiv.appendChild(slideNumberInput);
+        container.appendChild(sectionDiv);
+    });
+}
+function initializeSwipers() {
+    const swiperContainers = document.querySelectorAll('.swiper-container');
+    swiperContainers.forEach((container, index) => {
+        const swiper = new Swiper(container, {
+            loop: true,  // This makes the carousel infinite
+            on: {
+                slideChange: function () {
+                    const fileDropdown = container.nextElementSibling;
+                    const slideNumberInput = fileDropdown.nextElementSibling;
+                    slideNumberInput.value = this.activeIndex + 1;
+                    fileDropdown.selectedIndex = this.activeIndex;
+                    updateCombinationInput();
+                }
+            }
+        });
+        swipers.push(swiper);
+    });
+}
+        function updateCombinationInput() {
+            const combination = swipers.map(swiper => swiper.activeIndex + 1).join('-');
+            document.getElementById('combinationInput').value = combination;
+        }
+
+function updateSlidesFromCombination() {
+    const combination = document.getElementById('combinationInput').value;
+    let slideIndices = combination.split('-').map(num => parseInt(num) - 1);
+    
+    // If the length of slideIndices is less than the number of swipers, fill in the rest with the last number
+    while (slideIndices.length < swipers.length) {
+        slideIndices.push(slideIndices[slideIndices.length - 1]);
+    }
+
+    slideIndices.forEach((slideIndex, i) => {
+        swipers[i].slideTo(slideIndex);
+    });
+}
+        function randomizeCombination() {
+    let randomCombination = [];
+
+    for (let i = 0; i < swipers.length; i++) {
+        let randomIndex = Math.floor(Math.random() * swipers[i].slides.length);
+        swipers[i].slideTo(randomIndex);
+        randomCombination.push(randomIndex + 1);
+    }
+
+    document.getElementById('combinationInput').value = randomCombination.join('-');
+}
+
+
+    </script>
+</body>
+
+</html>
