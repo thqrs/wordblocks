@@ -78,42 +78,43 @@
         };
         
         function loadFiles() {
-            const theme = document.getElementById('folderDropdown').value;
-            if (!theme) return;
+    const theme = document.getElementById('folderDropdown').value;
+    if (!theme) return;
 
-            document.getElementById('pageTitle').textContent = theme;
-            const container = document.getElementById('displayContainer');
-            container.innerHTML = ''; // Clear previous content
-        
-            fetch('manifest.json')
-                .then(response => response.json())
-                .then(data => {
-                    let allSections = {};
-                    let promises = [];
+    document.getElementById('pageTitle').textContent = theme;
+    const container = document.getElementById('displayContainer');
+    container.innerHTML = ''; // Clear previous content
 
-                    for (let section in patterns) {
-                        allSections[section] = [];
-                    }
+    fetch('manifest.json')
+        .then(response => response.json())
+        .then(data => {
+            let allSections = {};
+            let promises = [];
 
-                    data.folders[theme].forEach(fileName => {
-                        const filePromise = fetch(BASE_URL + encodeURIComponent(theme) + '/' + encodeURIComponent(fileName))
-                            .then(response => response.text())
-                            .then(content => {
-                                console.log(`Content of ${fileName}:`, content); // Log the content for debugging
-                                const extractedSections = extractSections(content);
-                                for (let section in patterns) {
-                                    allSections[section].push(extractedSections[section]);
-                                }
-                            });
+            for (let section in patterns) {
+                allSections[section] = [];
+            }
 
-                        promises.push(filePromise);
+            data.folders[theme].forEach(fileName => {
+                const filePromise = fetch(BASE_URL + encodeURIComponent(theme) + '/' + encodeURIComponent(fileName))
+                    .then(response => response.text())
+                    .then(content => {
+                        console.log(`Content of ${fileName}:`, content); // Log the content for debugging
+                        const extractedSections = extractSections(content);
+                        for (let section in patterns) {
+                            allSections[section].push(extractedSections[section]);
+                        }
                     });
 
-                    Promise.all(promises).then(() => {
-                        displayData(allSections);
-                    });
-                });
-        }
+                promises.push(filePromise);
+            });
+
+            Promise.all(promises).then(() => {
+                displayData(allSections, data.folders[theme]);
+                initializeSwipers();
+            });
+        });
+}
 
         function extractSections(content) {
             let results = {};
@@ -124,68 +125,73 @@
             return results;
         }
 
-        function displayData(allSections) {
-            const container = document.getElementById('displayContainer');
+        function displayData(allSections, fileNames) {
+    const container = document.getElementById('displayContainer');
 
-            Object.keys(patterns).forEach((h2Name, index) => {
-                const sectionDiv = document.createElement('div');
+    Object.keys(patterns).forEach((h2Name, index) => {
+        const sectionDiv = document.createElement('div');
 
-                const h2 = document.createElement('h2');
-                h2.textContent = h2Name;
-                sectionDiv.appendChild(h2);
+        const h2 = document.createElement('h2');
+        h2.textContent = h2Name;
+        sectionDiv.appendChild(h2);
 
-                const swiperContainer = document.createElement('div');
-                swiperContainer.className = 'swiper-container';
+        const swiperContainer = document.createElement('div');
+        swiperContainer.className = 'swiper-container';
 
-                const swiperWrapper = document.createElement('div');
-                swiperWrapper.className = 'swiper-wrapper';
+        const swiperWrapper = document.createElement('div');
+        swiperWrapper.className = 'swiper-wrapper';
 
-                allSections[h2Name].forEach(sectionContent => {
-                    const slideDiv = document.createElement('div');
-                    slideDiv.className = 'swiper-slide';
-                    slideDiv.textContent = sectionContent;
-                    swiperWrapper.appendChild(slideDiv);
-                });
+        allSections[h2Name].forEach(sectionContent => {
+            const slideDiv = document.createElement('div');
+            slideDiv.className = 'swiper-slide';
+            slideDiv.textContent = sectionContent;
+            swiperWrapper.appendChild(slideDiv);
+        });
 
-                const fileDropdown = document.createElement('select');
-                fileDropdown.onchange = () => updateCombinationInput();
+        const fileDropdown = document.createElement('select');
+        fileDropdown.onchange = () => updateCombinationInput();
 
-                allSections[h2Name].forEach((_, fileIndex) => {
-                    const option = document.createElement('option');
-                    option.value = fileIndex;
-                    option.textContent = data.folders[theme][fileIndex];
-                    fileDropdown.appendChild(option);
-                });
+        fileNames.forEach((fileName, fileIndex) => {
+            const option = document.createElement('option');
+            option.value = fileIndex;
+            option.textContent = fileName;
+            fileDropdown.appendChild(option);
+        });
 
-                const slideNumberInput = document.createElement('input');
-                slideNumberInput.type = 'number';
-                slideNumberInput.min = 1;
-                slideNumberInput.max = allSections[h2Name].length;
-                slideNumberInput.onchange = function () {
-                    const slideIndex = parseInt(this.value) - 1;
-                    swipers[index].slideTo(slideIndex);
+        const slideNumberInput = document.createElement('input');
+        slideNumberInput.type = 'number';
+        slideNumberInput.min = 1;
+        slideNumberInput.max = allSections[h2Name].length;
+        slideNumberInput.onchange = function () {
+            const slideIndex = parseInt(this.value) - 1;
+            swipers[index].slideTo(slideIndex);
+            updateCombinationInput();
+        };
+
+        swiperContainer.appendChild(swiperWrapper);
+        sectionDiv.appendChild(swiperContainer);
+        sectionDiv.appendChild(fileDropdown);
+        sectionDiv.appendChild(slideNumberInput);
+        container.appendChild(sectionDiv);
+    });
+}
+function initializeSwipers() {
+    const swiperContainers = document.querySelectorAll('.swiper-container');
+    swiperContainers.forEach((container, index) => {
+        const swiper = new Swiper(container, {
+            on: {
+                slideChange: function () {
+                    const fileDropdown = container.nextElementSibling;
+                    const slideNumberInput = fileDropdown.nextElementSibling;
+                    slideNumberInput.value = this.activeIndex + 1;
+                    fileDropdown.selectedIndex = this.activeIndex;
                     updateCombinationInput();
-                };
-
-                swiperContainer.appendChild(swiperWrapper);
-                sectionDiv.appendChild(swiperContainer);
-                sectionDiv.appendChild(fileDropdown);
-                sectionDiv.appendChild(slideNumberInput);
-                container.appendChild(sectionDiv);
-                
-                const swiper = new Swiper(swiperContainer, {
-                    on: {
-                        slideChange: function () {
-                            slideNumberInput.value = this.activeIndex + 1;
-                            fileDropdown.selectedIndex = this.activeIndex;
-                            updateCombinationInput();
-                        }
-                    }
-                });
-                swipers.push(swiper);
-            });
-        }
-
+                }
+            }
+        });
+        swipers.push(swiper);
+    });
+}
         function updateCombinationInput() {
             const combination = swipers.map(swiper => swiper.activeIndex + 1).join('-');
             document.getElementById('combinationInput').value = combination;
