@@ -44,7 +44,8 @@
         };
 */
 const patterns = {
-     "Test Pattern": /\b(\w+\s+){4}\w+/
+     "Test Pattern": /\b(\w+\s+){4}\w+/,
+    "Test Pattern": /^([\s\S]{1,100})/,  // Capture the first 100 characters
 };
 
         window.onload = function () {
