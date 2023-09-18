@@ -45,7 +45,84 @@
         const BASE_URL = 'https://raw.githubusercontent.com/thqrs/wordblocks/main/';
         let swipers = [];
 
-        // ... (patterns, window.onload, loadFiles, extractSections) remain unchanged
+ const patterns = {
+            "Engage": /Engage:\s*([\s\S]*?)(?=\n\s*Set the Objective:)/,
+            "Set the Objective": /Set the Objective:\s*([\s\S]*?)(?=\n\s*Highlight the Value:)/,
+            "Highlight the Value": /Highlight the Value:\s*([\s\S]*?)(?=\nBiblical Exploration:)/,
+            "Reiterate the Question": /Reiterate the Question:\s*([\s\S]*?)(?=\n\s*Reading the Passage:)/,
+            "Reading the Passage": /Reading the Passage:\s*([\s\S]*?)(?=\n\s*Clarification:)/,
+            "Clarification": /Clarification:\s*([\s\S]*?)(?=\n\s*Illustration:)/,
+            "Illustration": /Illustration:\s*([\s\S]*?)(?=\n\s*Application:)/,
+            "Application": /Application:\s*([\s\S]*?)(?=\n\s*Transition:)/,
+            "Transition": /Transition:\s*([\s\S]*?)(?=\n\s*Reiterate the Question:)/,
+            "Second Reiterate the Question": /Transition:.*?Reiterate the Question:\s*([\s\S]*?)(?=\n\s*Reading the Passage:)/s,
+            "Recap": /Recap:\s*([\s\S]*?)(?=\n\s*Call to Action:)/,
+            "Call to Action": /Call to Action:\s*([\s\S]*?)(?=\n\s*Highlight Benefits:)/,
+            "Highlight Benefits": /Highlight Benefits:\s*([\s\S]*?)(?=\n\s*Closing Thought:)/,
+            "Closing Thought": /Closing Thought:\s*([\s\S]*?)(?=\nPhrase to sum up the talk:)/,
+            "Phrase to sum up the talk": /Phrase to sum up the talk:\s*"([\s\S]*?)"/
+        };
+
+        window.onload = function () {
+            fetch('manifest.json')
+                .then(response => response.json())
+                .then(data => {
+                    const dropdown = document.getElementById('folderDropdown');
+                    Object.keys(data.folders).forEach(folder => {
+                        const option = document.createElement('option');
+                        option.value = folder;
+                        option.textContent = folder;
+                        dropdown.appendChild(option);
+                    });
+                });
+        };
+        
+        function loadFiles() {
+            const theme = document.getElementById('folderDropdown').value;
+            if (!theme) return;
+
+            document.getElementById('pageTitle').textContent = theme;
+            const container = document.getElementById('displayContainer');
+            container.innerHTML = ''; // Clear previous content
+        
+            fetch('manifest.json')
+                .then(response => response.json())
+                .then(data => {
+                    let allSections = {};
+                    let promises = [];
+
+                    for (let section in patterns) {
+                        allSections[section] = [];
+                    }
+
+                    data.folders[theme].forEach(fileName => {
+                        const filePromise = fetch(BASE_URL + encodeURIComponent(theme) + '/' + encodeURIComponent(fileName))
+                            .then(response => response.text())
+                            .then(content => {
+                                console.log(`Content of ${fileName}:`, content); // Log the content for debugging
+                                const extractedSections = extractSections(content);
+                                for (let section in patterns) {
+                                    allSections[section].push(extractedSections[section]);
+                                }
+                            });
+
+                        promises.push(filePromise);
+                    });
+
+                    Promise.all(promises).then(() => {
+                        displayData(allSections);
+                    });
+                });
+        }
+
+        function extractSections(content) {
+            let results = {};
+            for (let section in patterns) {
+                let match = content.match(patterns[section]);
+                results[section] = match ? match[1].trim() : "Not found";
+            }
+            return results;
+        }
 
         function displayData(allSections) {
             const container = document.getElementById('displayContainer');
