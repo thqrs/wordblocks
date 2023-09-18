@@ -31,7 +31,7 @@
     <h1 id="pageTitle">Select a theme</h1>
 
     <input type="text" id="combinationInput" placeholder="Combination (e.g. 1-2-3-4)" onchange="updateSlidesFromCombination()">
-
+<button onclick="randomizeCombination()">Randomize</button>
     <select id="folderDropdown" onchange="loadFiles()">
         <option value="">Select a theme...</option>
     </select>
@@ -179,6 +179,7 @@ function initializeSwipers() {
     const swiperContainers = document.querySelectorAll('.swiper-container');
     swiperContainers.forEach((container, index) => {
         const swiper = new Swiper(container, {
+            loop: true,  // This makes the carousel infinite
             on: {
                 slideChange: function () {
                     const fileDropdown = container.nextElementSibling;
@@ -210,6 +211,18 @@ function updateSlidesFromCombination() {
         swipers[i].slideTo(slideIndex);
     });
 }
+        function randomizeCombination() {
+    let randomCombination = [];
+
+    for (let i = 0; i < swipers.length; i++) {
+        let randomIndex = Math.floor(Math.random() * swipers[i].slides.length);
+        swipers[i].slideTo(randomIndex);
+        randomCombination.push(randomIndex + 1);
+    }
+
+    document.getElementById('combinationInput').value = randomCombination.join('-');
+}
+
 
     </script>
 </body>
