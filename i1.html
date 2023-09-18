@@ -24,6 +24,7 @@
     </div>
 
     <script>
+/*
         const patterns = {
             "Engage": /Engage:\s*([\s\S]*?)(?=\n\s*Set the Objective:)/,
             "Set the Objective": /Set the Objective:\s*([\s\S]*?)(?=\n\s*Highlight the Value:)/,
@@ -41,6 +42,12 @@
             "Closing Thought": /Closing Thought:\s*([\s\S]*?)(?=\nPhrase to sum up the talk:)/,
             "Phrase to sum up the talk": /Phrase to sum up the talk:\s*"([\s\S]*?)"/
         };
+*/
+const patterns = {
+    "Engage": /Engage:\s*([\s\S]+?)(?=\s*Set the Objective:)/,
+    "Set the Objective": /Set the Objective:\s*([\s\S]+?)(?=\s*Highlight the Value:)/,
+    // ... (continue with the rest of the patterns, making similar adjustments)
+};
 
         window.onload = function () {
             fetch('manifest.json')
